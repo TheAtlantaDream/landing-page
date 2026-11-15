@@ -1,448 +1,765 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VoiceCoder · Code with your voice</title>
     <!-- EDIT: the description and og:* tags are what search results and link previews show. -->
-    <meta name="description" content="Code by voice. Describe a change out loud and an AI agent writes it in your own workspace. Built for developers who can’t rely on a keyboard or mouse.">
-    <meta property="og:title" content="VoiceCoder · Code with your voice">
-    <meta property="og:description" content="Code by voice. Describe a change out loud and an AI agent writes it in your own workspace. Built for developers who can’t rely on a keyboard or mouse.">
-    <meta property="og:type" content="website">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+    <meta
+      name="description"
+      content="Code by voice. Describe a change out loud and an AI agent writes it in your own workspace. Built for developers who can’t rely on a keyboard or mouse."
+    />
+    <meta property="og:title" content="VoiceCoder · Code with your voice" />
+    <meta
+      property="og:description"
+      content="Code by voice. Describe a change out loud and an AI agent writes it in your own workspace. Built for developers who can’t rely on a keyboard or mouse."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&amp;family=Silkscreen&amp;display=swap"
+      rel="stylesheet"
+    />
     <script src="assets/vendor/three.min.js"></script>
     <script>
-        // A missing team photo falls back to its coloured square. The <img> is swapped for a
-        // plain block, because browsers draw a broken-image icon on an <img> without a source.
-        function photoFallback(img) {
-            const square = document.createElement('div');
-            square.className = img.className;
-            square.setAttribute('role', 'img');
-            square.setAttribute('aria-label', 'Photo of ' + img.dataset.name);
-            img.replaceWith(square);
-        }
+      // A missing team photo falls back to its coloured square. The <img> is swapped for a
+      // plain block, because browsers draw a broken-image icon on an <img> without a source.
+      function photoFallback(img) {
+        const square = document.createElement("div");
+        square.className = img.className;
+        square.setAttribute("role", "img");
+        square.setAttribute("aria-label", "Photo of " + img.dataset.name);
+        img.replaceWith(square);
+      }
     </script>
     <style>
-        :root {
-            --bg-color: #F5F4EF;
-            --text-color: #111111;
-            --block-bg: #EAEAE4;
-            --pill-purple: #FF6060;
-            --pill-pink: #FFFFC5;
-            --highlight-yellow: #FBEE8E;
+      :root {
+        --bg-color: #f5f4ef;
+        --text-color: #111111;
+        --block-bg: #eaeae4;
+        --pill-purple: #ff6060;
+        --pill-pink: #ffffc5;
+        --highlight-yellow: #fbee8e;
 
-            --font-sans: 'Space Grotesk', sans-serif;
-            --font-pixel: 'Silkscreen', cursive;
-        }
+        --font-sans: "Space Grotesk", sans-serif;
+        --font-pixel: "Silkscreen", cursive;
+      }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        a, button { cursor: pointer; }
+      a,
+      button {
+        cursor: pointer;
+      }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-sans);
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            position: relative;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: var(--font-sans);
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        position: relative;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
 
+      #canvas-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: auto;
+      }
 
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: auto;
-        }
+      .ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 2rem;
+      }
 
+      .edge-nav {
+        pointer-events: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+      }
 
-        .ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 2rem;
-        }
+      .edge-nav.bottom {
+        align-items: flex-end;
+      }
 
+      .logo-block {
+        background: var(--text-color);
+        color: var(--bg-color);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        font-size: 0.85rem;
+        border-radius: 4px;
+      }
 
-        .edge-nav {
-            pointer-events: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-        }
+      .main-nav {
+        display: flex;
+        gap: 2rem;
+        background: rgba(245, 244, 239, 0.8);
+        backdrop-filter: blur(4px);
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+      }
 
-        .edge-nav.bottom {
-            align-items: flex-end;
-        }
+      .main-nav a,
+      .meta-text,
+      .action-text {
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 500;
+      }
 
-        .logo-block {
-            background: var(--text-color);
-            color: var(--bg-color);
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-            font-size: 0.85rem;
-            border-radius: 4px;
-        }
+      .main-nav a:hover {
+        opacity: 0.6;
+      }
 
-        .main-nav {
-            display: flex;
-            gap: 2rem;
-            background: rgba(245, 244, 239, 0.8);
-            backdrop-filter: blur(4px);
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-        }
+      .action-text {
+        background: rgba(245, 244, 239, 0.8);
+        backdrop-filter: blur(4px);
+        padding: 0.5rem;
+      }
 
-        .main-nav a, .meta-text, .action-text {
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-weight: 500;
-        }
+      .contact-block {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        pointer-events: auto;
+      }
 
-        .main-nav a:hover {
-            opacity: 0.6;
-        }
+      .say-hi {
+        background-color: var(--highlight-yellow);
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+      }
 
-        .action-text {
-            background: rgba(245, 244, 239, 0.8);
-            backdrop-filter: blur(4px);
-            padding: 0.5rem;
-        }
+      .email-link {
+        font-size: 0.75rem;
+        text-decoration: none;
+        color: var(--text-color);
+      }
 
-        .contact-block {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            pointer-events: auto;
-        }
+      .hero-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -40%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        pointer-events: none;
+      }
 
-        .say-hi {
-            background-color: var(--highlight-yellow);
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
-        }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-        .email-link {
-            font-size: 0.75rem;
-            text-decoration: none;
-            color: var(--text-color);
-        }
+      .row-2 {
+        margin-top: -1rem;
+      }
 
+      .pill {
+        font-family: var(--font-sans);
+        font-size: 1.3rem;
+        font-weight: 400;
+        padding: 0.3rem 1.5rem 0.5rem 1.5rem;
+        border-radius: 50px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        display: inline-block;
+      }
 
-        .hero-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -40%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            width: 100%;
-            pointer-events: none;
-        }
+      .pill.purple {
+        background-color: var(--pill-purple);
+      }
+      .pill.pink {
+        background-color: var(--pill-pink);
+      }
 
-        .row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
+      .pixel-block {
+        font-family: var(--font-pixel);
+        font-size: 3rem;
+        line-height: 0.9;
+        background-color: var(--block-bg);
+        padding: 0.5rem 1rem;
+        display: inline-block;
+        text-transform: capitalize;
 
-        .row-2 {
-            margin-top: -1rem;
-        }
+        text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+      }
 
+      .pixel-block sup {
+        font-size: 2.5rem;
+        vertical-align: super;
+        line-height: 0;
+      }
 
-        .pill {
-            font-family: var(--font-sans);
-            font-size: 1.3rem;
-            font-weight: 400;
-            padding: 0.3rem 1.5rem 0.5rem 1.5rem;
-            border-radius: 50px;
-            line-height: 1;
-            letter-spacing: -0.02em;
-            display: inline-block;
-        }
-
-        .pill.purple { background-color: var(--pill-purple); }
-        .pill.pink { background-color: var(--pill-pink); }
-
-
+      @media (max-width: 900px) {
         .pixel-block {
-            font-family: var(--font-pixel);
-            font-size: 3rem;
-            line-height: 0.9;
-            background-color: var(--block-bg);
-            padding: 0.5rem 1rem;
-            display: inline-block;
-            text-transform: capitalize;
-
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+          font-size: 2.4rem;
         }
-
-
-        .pixel-block sup {
-            font-size: 2.5rem;
-            vertical-align: super;
-            line-height: 0;
+        .pill {
+          font-size: 1.1rem;
         }
-
-
-        @media (max-width: 900px) {
-            .pixel-block { font-size: 2.4rem; }
-            .pill { font-size: 1.1rem; }
-            .main-nav { gap: 1rem; }
+        .main-nav {
+          gap: 1rem;
         }
+      }
 
-        @media (max-width: 600px) {
-            .pixel-block { font-size: 1.7rem; padding: 0.4rem; }
-            .pill { font-size: 0.95rem; padding: 0.3rem 1rem; }
-            .row { gap: 0.5rem; }
-            .row-2 { margin-top: -0.5rem; }
-            .edge-nav.top { flex-wrap: wrap; gap: 0.5rem; }
-            .main-nav { flex-wrap: wrap; gap: 0.5rem 1rem; }
-            .ui-layer { padding: 1rem; }
+      @media (max-width: 600px) {
+        .pixel-block {
+          font-size: 1.7rem;
+          padding: 0.4rem;
         }
-
-        .brand-link { text-decoration: none; }
-        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-        .main-nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 4px; }
-        a:focus-visible, button:focus-visible { outline: 2px solid var(--text-color); outline-offset: 3px; }
-        .page-view:focus { outline: none; }
-
-        .motion-toggle {
-            pointer-events: auto;
-            min-height: 36px;
-            padding: 0.5rem 1rem;
-            border: 0;
-            border-radius: 50px;
-            background: rgba(245, 244, 239, 0.8);
-            backdrop-filter: blur(4px);
-            color: var(--text-color);
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            font-weight: 500;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+        .pill {
+          font-size: 0.95rem;
+          padding: 0.3rem 1rem;
         }
-        .motion-toggle:hover { opacity: 0.6; }
+        .row {
+          gap: 0.5rem;
+        }
+        .row-2 {
+          margin-top: -0.5rem;
+        }
+        .edge-nav.top {
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .main-nav {
+          flex-wrap: wrap;
+          gap: 0.5rem 1rem;
+        }
+        .ui-layer {
+          padding: 1rem;
+        }
+      }
 
+      .brand-link {
+        text-decoration: none;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .main-nav a[aria-current="page"] {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--text-color);
+        outline-offset: 3px;
+      }
+      .page-view:focus {
+        outline: none;
+      }
+
+      .motion-toggle {
+        pointer-events: auto;
+        min-height: 36px;
+        padding: 0.5rem 1rem;
+        border: 0;
+        border-radius: 50px;
+        background: rgba(245, 244, 239, 0.8);
+        backdrop-filter: blur(4px);
+        color: var(--text-color);
+        font-family: var(--font-sans);
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .motion-toggle:hover {
+        opacity: 0.6;
+      }
+
+      .page-view {
+        position: absolute;
+        /* Bottom inset leaves room for the Pause animation button. */
+        inset: 5rem 2rem 4.5rem 2rem;
+        overflow-y: auto;
+        pointer-events: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+      .page-view[hidden],
+      .hero-center[hidden] {
+        display: none;
+      }
+      .page-view {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .page-view::-webkit-scrollbar {
+        display: none;
+      }
+
+      .team {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 2.75rem;
+      }
+      .member {
+        width: 100%;
+        display: flex;
+        align-items: stretch;
+        gap: 1rem;
+      }
+      .member:nth-child(even) {
+        flex-direction: row-reverse;
+      }
+      .member .photo {
+        flex: 0 0 140px;
+        width: 140px;
+        height: 140px;
+      }
+      .member-text {
+        flex: 1 1 auto;
+        min-height: 140px;
+        background: #ffffff;
+        border-radius: 6px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.4rem;
+      }
+      .member-text h3 {
+        font-size: 1.15rem;
+        font-weight: 500;
+      }
+      .member-text p {
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .member-text a {
+        color: var(--text-color);
+        font-weight: 500;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      @media (max-width: 700px) {
+        .member,
+        .member:nth-child(even) {
+          align-self: stretch;
+          flex-direction: column;
+        }
+        .member .photo {
+          width: 120px;
+          height: 120px;
+          flex-basis: auto;
+        }
+        .member-text {
+          min-height: 0;
+        }
+      }
+      .panel {
+        width: 100%;
+        max-width: 1040px;
+        background: rgba(245, 244, 239, 0.86);
+        backdrop-filter: blur(6px);
+        border-radius: 6px;
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+      .page-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 400;
+      }
+      .page-title:focus {
+        outline: none;
+      }
+      .page-title .pill {
+        font-size: 1.3rem;
+      }
+      .page-title .pixel-block {
+        font-size: 2.6rem;
+      }
+      .lead {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        max-width: 680px;
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        list-style: none;
+      }
+      .card {
+        background: #ffffff;
+        border-radius: 6px;
+        padding: 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .card h3 {
+        font-size: 1.2rem;
+        font-weight: 500;
+      }
+      .card p {
+        font-size: 0.98rem;
+        line-height: 1.55;
+      }
+      .step-num {
+        font-family: var(--font-pixel);
+        font-size: 1.6rem;
+        line-height: 1;
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        align-self: flex-start;
+      }
+      .bg-coral {
+        background: #ff6060;
+      }
+      .bg-yellow {
+        background: #ffffc5;
+      }
+      .bg-sage {
+        background: #71906e;
+      }
+      .bg-mint {
+        background: #98fb98;
+      }
+      .bg-black {
+        background: #141414;
+        color: #f5f4ef;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        list-style: none;
+      }
+      .chips li {
+        font-size: 0.95rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 50px;
+      }
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .cta {
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: var(--text-color);
+        padding: 0.85rem 1.4rem;
+        border-radius: 4px;
+      }
+      .cta.primary {
+        background: #141414;
+        color: #f5f4ef;
+      }
+      .cta.secondary {
+        border: 2px solid #141414;
+      }
+      .photo {
+        aspect-ratio: 1 / 1;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-pixel);
+        font-size: 1rem;
+      }
+      img.photo {
+        display: block;
+        object-fit: cover;
+      }
+      .role {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 500;
+      }
+      @media (max-width: 600px) {
+        /* Top clears the nav (it wraps to a second line on phones); bottom clears Pause. */
         .page-view {
-            position: absolute;
-            /* Bottom inset leaves room for the Pause animation button. */
-            inset: 5rem 2rem 4.5rem 2rem;
-            overflow-y: auto;
-            pointer-events: auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        .page-view[hidden], .hero-center[hidden] { display: none; }
-        .page-view { scrollbar-width: none; -ms-overflow-style: none; }
-        .page-view::-webkit-scrollbar { display: none; }
-
-        .team { list-style: none; display: flex; flex-direction: column; gap: 2.75rem; }
-        .member { width: 100%; display: flex; align-items: stretch; gap: 1rem; }
-        .member:nth-child(even) { flex-direction: row-reverse; }
-        .member .photo { flex: 0 0 140px; width: 140px; height: 140px; }
-        .member-text { flex: 1 1 auto; min-height: 140px; background: #FFFFFF; border-radius: 6px; padding: 1rem 1.2rem; display: flex; flex-direction: column; justify-content: center; gap: 0.4rem; }
-        .member-text h3 { font-size: 1.15rem; font-weight: 500; }
-        .member-text p { font-size: 0.95rem; line-height: 1.5; }
-        .member-text a { color: var(--text-color); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
-        @media (max-width: 700px) {
-            .member, .member:nth-child(even) { align-self: stretch; flex-direction: column; }
-            .member .photo { width: 120px; height: 120px; flex-basis: auto; }
-            .member-text { min-height: 0; }
+          inset: 6.5rem 1rem 3.75rem 1rem;
         }
         .panel {
-            width: 100%;
-            max-width: 1040px;
-            background: rgba(245, 244, 239, 0.86);
-            backdrop-filter: blur(6px);
-            border-radius: 6px;
-            padding: 2.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
+          padding: 1.5rem;
         }
-        .page-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; font-weight: 400; }
-        .page-title:focus { outline: none; }
-        .page-title .pill { font-size: 1.3rem; }
-        .page-title .pixel-block { font-size: 2.6rem; }
-        .lead { font-size: 1.15rem; line-height: 1.6; max-width: 680px; }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; list-style: none; }
-        .card { background: #FFFFFF; border-radius: 6px; padding: 1.4rem; display: flex; flex-direction: column; gap: 0.75rem; }
-        .card h3 { font-size: 1.2rem; font-weight: 500; }
-        .card p { font-size: 0.98rem; line-height: 1.55; }
-        .step-num { font-family: var(--font-pixel); font-size: 1.6rem; line-height: 1; display: inline-block; padding: 0.3rem 0.6rem; align-self: flex-start; }
-        .bg-coral { background: #FF6060; }
-        .bg-yellow { background: #FFFFC5; }
-        .bg-sage { background: #71906E; }
-        .bg-mint { background: #98FB98; }
-        .bg-black { background: #141414; color: #F5F4EF; }
-        .chips { display: flex; flex-wrap: wrap; gap: 0.6rem; list-style: none; }
-        .chips li { font-size: 0.95rem; padding: 0.4rem 0.9rem; border-radius: 50px; }
-        .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-        .cta { font-size: 1rem; font-weight: 500; text-decoration: none; color: var(--text-color); padding: 0.85rem 1.4rem; border-radius: 4px; }
-        .cta.primary { background: #141414; color: #F5F4EF; }
-        .cta.secondary { border: 2px solid #141414; }
-        .photo { aspect-ratio: 1 / 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--font-pixel); font-size: 1rem; }
-        img.photo { display: block; object-fit: cover; }
-        .role { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
-        @media (max-width: 600px) {
-            /* Top clears the nav (it wraps to a second line on phones); bottom clears Pause. */
-            .page-view { inset: 6.5rem 1rem 3.75rem 1rem; }
-            .panel { padding: 1.5rem; }
-            .page-title .pixel-block { font-size: 1.8rem; }
+        .page-title .pixel-block {
+          font-size: 1.8rem;
         }
+      }
 
+      .hero-cta {
+        pointer-events: auto;
+        margin-top: 1.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        min-height: 52px;
+        padding: 0 1.6rem;
+        background: #141414;
+        color: #f5f4ef;
+        border-radius: 50px;
+        font-family: var(--font-sans);
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 150ms ease;
+      }
+      .hero-cta:hover {
+        background: #71906e;
+        color: #111111;
+      }
+      .hero-cta:focus-visible {
+        outline: 3px solid #ff6060;
+        outline-offset: 4px;
+      }
+      .hero-cta .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ff6060;
+      }
+      @media (prefers-reduced-motion: reduce) {
         .hero-cta {
-            pointer-events: auto;
-            margin-top: 1.75rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.6rem;
-            min-height: 52px;
-            padding: 0 1.6rem;
-            background: #141414;
-            color: #F5F4EF;
-            border-radius: 50px;
-            font-family: var(--font-sans);
-            font-size: 1rem;
-            font-weight: 500;
-            letter-spacing: 0.02em;
-            text-decoration: none;
-            cursor: pointer;
-            transition: background-color 150ms ease;
+          transition: none;
         }
-        .hero-cta:hover { background: #71906E; color: #111111; }
-        .hero-cta:focus-visible { outline: 3px solid #FF6060; outline-offset: 4px; }
-        .hero-cta .dot { width: 10px; height: 10px; border-radius: 50%; background: #FF6060; }
-        @media (prefers-reduced-motion: reduce) { .hero-cta { transition: none; } }
+      }
 
-        .setup-steps { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
-        .setup-step { background: #FFFFFF; border-radius: 6px; padding: 1.3rem 1.4rem; display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; align-items: start; }
-        .setup-step .step-num { grid-row: span 3; }
-        .setup-step h3 { font-size: 1.15rem; font-weight: 500; }
-        .setup-step p { font-size: 0.98rem; line-height: 1.55; }
-        .code-row { display: flex; align-items: stretch; gap: 0.5rem; min-width: 0; }
-        .code-row code { flex: 1 1 auto; min-width: 0; overflow-x: auto; background: #141414; color: #F5F4EF; border-radius: 4px; padding: 0.7rem 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88rem; white-space: pre; }
-        .copy-btn { flex: none; min-height: 44px; padding: 0 0.9rem; border: 2px solid #141414; border-radius: 4px; background: #FFFFC5; color: #111111; font-family: var(--font-sans); font-size: 0.85rem; font-weight: 500; cursor: pointer; }
-        .copy-btn:focus-visible { outline: 3px solid #FF6060; outline-offset: 2px; }
-        .tabs-note { font-size: 0.95rem; line-height: 1.55; }
-        .section-label { font-family: var(--font-pixel); font-size: 1.3rem; display: inline-block; padding: 0.3rem 0.7rem; align-self: flex-start; }
-        @media (max-width: 600px) { .setup-step { grid-template-columns: 1fr; } .setup-step .step-num { grid-row: auto; } }
+      .setup-steps {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .setup-step {
+        background: #ffffff;
+        border-radius: 6px;
+        padding: 1.3rem 1.4rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.4rem 1rem;
+        align-items: start;
+      }
+      .setup-step .step-num {
+        grid-row: span 3;
+      }
+      .setup-step h3 {
+        font-size: 1.15rem;
+        font-weight: 500;
+      }
+      .setup-step p {
+        font-size: 0.98rem;
+        line-height: 1.55;
+      }
+      .code-row {
+        display: flex;
+        align-items: stretch;
+        gap: 0.5rem;
+        min-width: 0;
+      }
+      .code-row code {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        background: #141414;
+        color: #f5f4ef;
+        border-radius: 4px;
+        padding: 0.7rem 0.9rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.88rem;
+        white-space: pre;
+      }
+      .copy-btn {
+        flex: none;
+        min-height: 44px;
+        padding: 0 0.9rem;
+        border: 2px solid #141414;
+        border-radius: 4px;
+        background: #ffffc5;
+        color: #111111;
+        font-family: var(--font-sans);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .copy-btn:focus-visible {
+        outline: 3px solid #ff6060;
+        outline-offset: 2px;
+      }
+      .tabs-note {
+        font-size: 0.95rem;
+        line-height: 1.55;
+      }
+      .section-label {
+        font-family: var(--font-pixel);
+        font-size: 1.3rem;
+        display: inline-block;
+        padding: 0.3rem 0.7rem;
+        align-self: flex-start;
+      }
+      @media (max-width: 600px) {
+        .setup-step {
+          grid-template-columns: 1fr;
+        }
+        .setup-step .step-num {
+          grid-row: auto;
+        }
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div id="canvas-container" aria-hidden="true"></div>
 
     <div class="ui-layer">
-        <div class="edge-nav top">
-            <a href="#" class="action-text brand-link">VoiceCoder</a>
-            <nav class="main-nav">
-                <a href="#what-we-do">What we do</a>
-                <a href="#setup">Set up</a>
-                <a href="#about-us">About us</a>
-            </nav>
-        </div>
+      <div class="edge-nav top">
+        <a href="#" class="action-text brand-link">VoiceCoder</a>
+        <nav class="main-nav">
+          <a href="#what-we-do">What we do</a>
+          <a href="#setup">Set up</a>
+          <a href="#about-us">About us</a>
+        </nav>
+      </div>
 
-        <!-- ============================================================
+      <!-- ============================================================
              EDIT: HOME — headline and main button
              Two rows: coral pill + grey pixel block, then pixel block + yellow pill.
              Change the words inside the <span>s. The button goes to the Devpost page (CONFIG.devpostUrl in the script).
              ============================================================ -->
-        <div class="hero-center">
-            <div class="row row-1">
-                <span class="pill purple">Code</span>
-                <span class="pixel-block">With Your</span>
-            </div>
-            <div class="row row-2">
-                <span class="pixel-block">VoiceCoder</span>
-                <span class="pill pink">Hands-free</span>
-            </div>
-            <a class="hero-cta" data-link="devpost" href="https://devpost.com/software/voicecoder"><span class="dot" aria-hidden="true"></span>Start coding with your voice</a>
+      <div class="hero-center">
+        <div class="row row-1">
+          <span class="pill purple">Code</span>
+          <span class="pixel-block">With Your</span>
         </div>
+        <div class="row row-2">
+          <span class="pixel-block">VoiceCoder</span>
+          <span class="pill pink">Hands-free</span>
+        </div>
+        <a
+          class="hero-cta"
+          data-link="devpost"
+          href="https://devpost.com/software/voicecoder"
+          ><span class="dot" aria-hidden="true"></span>Start coding with your
+          voice</a
+        >
+      </div>
 
-
-        <!-- ============================================================
+      <!-- ============================================================
              EDIT: WHAT WE DO page (#what-we-do)
              - The intro paragraph (class="lead") explains the product in a few sentences.
              - The three numbered cards are the Speak / Agent codes / Review steps.
              - The coloured chips are short feature highlights.
              Check every claim here still matches how VoiceCoder actually works.
              ============================================================ -->
-        <section class="page-view" id="view-what-we-do" tabindex="-1" aria-labelledby="what-title" hidden>
-            <div class="panel">
-                <h1 class="page-title" id="what-title" tabindex="-1">
-                    <span class="pill purple">What</span>
-                    <span class="pixel-block">We Do</span>
-                </h1>
-                <!-- EDIT: one-paragraph summary of VoiceCoder. -->
-                <p class="lead">VoiceCoder lets developers write code by speaking. You describe a change out loud, an AI agent makes it in your own workspace, and you review the result in VS Code. It is built for developers who can’t use a keyboard or mouse reliably, and it works for anyone who would rather talk than type.</p>
-                <!-- EDIT: the three steps of using VoiceCoder (title in <h3>, explanation in <p>). -->
-                <ol class="card-grid">
-                    <li class="card">
-                        <span class="step-num bg-coral">1</span>
-                        <h3>Speak</h3>
-                        <p>Your microphone is on from the start. Say what you want to build or change, then pause. Your words appear as you talk.</p>
-                    </li>
-                    <li class="card">
-                        <span class="step-num bg-yellow">2</span>
-                        <h3>The agent codes</h3>
-                        <p>Your request is cleaned up and sent to a coding agent, which edits the files in your workspace while you watch.</p>
-                    </li>
-                    <li class="card">
-                        <span class="step-num bg-sage">3</span>
-                        <h3>Review and approve</h3>
-                        <p>See the changes in VS Code next to a plain-language summary. Say “approve” to keep them, or ask to undo them.</p>
-                    </li>
-                </ol>
-                <!-- EDIT: feature highlights. Keep each one short; one <li> per chip. -->
-                <ul class="chips" aria-label="Features">
-                    <li class="bg-mint">Hands-free from the first second</li>
-                    <li class="bg-yellow">Live transcript</li>
-                    <li class="bg-coral">Results read aloud</li>
-                    <li class="bg-black">Your own Coder workspace</li>
-                </ul>
-            </div>
-        </section>
+      <section
+        class="page-view"
+        id="view-what-we-do"
+        tabindex="-1"
+        aria-labelledby="what-title"
+        hidden
+      >
+        <div class="panel">
+          <h1 class="page-title" id="what-title" tabindex="-1">
+            <span class="pill purple">What</span>
+            <span class="pixel-block">We Do</span>
+          </h1>
+          <!-- EDIT: one-paragraph summary of VoiceCoder. -->
+          <p class="lead">
+            VoiceCoder lets developers write code by speaking. You describe a
+            change out loud, an AI agent makes it in your own workspace, and you
+            review the result in VS Code. It is built for developers who can’t
+            use a keyboard or mouse reliably, and it works for anyone who would
+            rather talk than type.
+          </p>
+          <!-- EDIT: the three steps of using VoiceCoder (title in <h3>, explanation in <p>). -->
+          <ol class="card-grid">
+            <li class="card">
+              <span class="step-num bg-coral">1</span>
+              <h3>Speak</h3>
+              <p>
+                Your microphone is on from the start. Say what you want to build
+                or change, then pause. Your words appear as you talk.
+              </p>
+            </li>
+            <li class="card">
+              <span class="step-num bg-yellow">2</span>
+              <h3>The agent codes</h3>
+              <p>
+                Your request is cleaned up and sent to a coding agent, which
+                edits the files in your workspace while you watch.
+              </p>
+            </li>
+            <li class="card">
+              <span class="step-num bg-sage">3</span>
+              <h3>Review and approve</h3>
+              <p>
+                See the changes in VS Code next to a plain-language summary. Say
+                “approve” to keep them, or ask to undo them.
+              </p>
+            </li>
+          </ol>
+          <!-- EDIT: feature highlights. Keep each one short; one <li> per chip. -->
+          <ul class="chips" aria-label="Features">
+            <li class="bg-mint">Hands-free from the first second</li>
+            <li class="bg-yellow">Live transcript</li>
+            <li class="bg-coral">Results read aloud</li>
+            <li class="bg-black">Your own Coder workspace</li>
+          </ul>
+        </div>
+      </section>
 
-        <!-- ============================================================
+      <!-- ============================================================
              EDIT: SET UP page (#setup)
              - The chips list what people need before they start.
              - "On Coder" and "On your computer" are numbered steps; each has a title (<h3>),
@@ -450,99 +767,219 @@
                BOTH the <code> text and the button's data-copy attribute so Copy matches.
              Check commands, sizes and file names against the VoiceCoder README.
              ============================================================ -->
-        <section class="page-view" id="view-setup" tabindex="-1" aria-labelledby="setup-title" hidden>
-            <div class="panel">
-                <h1 class="page-title" id="setup-title" tabindex="-1">
-                    <span class="pill purple">How to</span>
-                    <span class="pixel-block">Set Up</span>
-                </h1>
-                <p class="lead">Run VoiceCoder in your own Coder workspace, or try it on your computer with Docker. Everything you need is in our GitHub repo.</p>
-                <div class="cta-row">
-                    <a class="cta primary" data-link="repo" href="https://github.com/TheAtlantaDream/VoiceCoder">View the repo on GitHub</a>
-                </div>
-                <!-- EDIT: what someone needs before setting up. -->
-                <ul class="chips" aria-label="What you need">
-                    <li class="bg-yellow">Docker with Compose v2</li>
-                    <li class="bg-mint">A Coder deployment (for workspaces)</li>
-                    <li class="bg-coral">An Anthropic API key</li>
-                    <li class="bg-black">Chrome or Edge with a microphone</li>
-                </ul>
+      <section
+        class="page-view"
+        id="view-setup"
+        tabindex="-1"
+        aria-labelledby="setup-title"
+        hidden
+      >
+        <div class="panel">
+          <h1 class="page-title" id="setup-title" tabindex="-1">
+            <span class="pill purple">How to</span>
+            <span class="pixel-block">Set Up</span>
+          </h1>
+          <p class="lead">
+            Run VoiceCoder in your own Coder workspace, or try it on your
+            computer with Docker. Everything you need is in our GitHub repo.
+          </p>
+          <div class="cta-row">
+            <a
+              class="cta primary"
+              data-link="repo"
+              href="https://github.com/TheAtlantaDream/VoiceCoder"
+              >View the repo on GitHub</a
+            >
+          </div>
+          <!-- EDIT: what someone needs before setting up. -->
+          <ul class="chips" aria-label="What you need">
+            <li class="bg-yellow">Docker with Compose v2</li>
+            <li class="bg-mint">A Coder deployment (for workspaces)</li>
+            <li class="bg-coral">An Anthropic API key</li>
+            <li class="bg-black">Chrome or Edge with a microphone</li>
+          </ul>
 
-                <!-- EDIT: steps for running VoiceCoder in a Coder workspace. -->
-                <span class="section-label bg-sage">On Coder</span>
-                <ol class="setup-steps">
-                    <li class="setup-step">
-                        <span class="step-num bg-coral" aria-hidden="true">1</span>
-                        <h3><span class="visually-hidden">Step 1: </span>Clone the repo</h3>
-                        <p>Clone it with its submodules (the bridge and the front end live in their own repos).</p>
-                        <div class="code-row"><code>git clone --recurse-submodules https://github.com/TheAtlantaDream/VoiceCoder.git</code><button type="button" class="copy-btn" data-copy="git clone --recurse-submodules https://github.com/TheAtlantaDream/VoiceCoder.git">Copy</button></div>
-                    </li>
-                    <li class="setup-step">
-                        <span class="step-num bg-yellow" aria-hidden="true">2</span>
-                        <h3><span class="visually-hidden">Step 2: </span>Push the Coder template</h3>
-                        <p>From the repo folder, push the template in <code>template/</code> to your Coder deployment.</p>
-                        <!-- TODO(team): confirm template push command -->
-                        <div class="code-row"><code>coder templates push voicecoder --directory ./template</code><button type="button" class="copy-btn" data-copy="coder templates push voicecoder --directory ./template">Copy</button></div>
-                    </li>
-                    <li class="setup-step">
-                        <span class="step-num bg-sage" aria-hidden="true">3</span>
-                        <h3><span class="visually-hidden">Step 3: </span>Create a workspace</h3>
-                        <p>In Coder, create a workspace from the VoiceCoder template and paste your key into the <strong>Anthropic API Key</strong> parameter. Without a key, VoiceCoder still transcribes and cleans your speech, but no coding agent runs.</p>
-                    </li>
-                    <li class="setup-step">
-                        <span class="step-num bg-mint" aria-hidden="true">4</span>
-                        <h3><span class="visually-hidden">Step 4: </span>Wait for the first build</h3>
-                        <p>The first boot builds the images and downloads the speech model (about 650 MB). After that, workspaces on the same host start quickly.</p>
-                    </li>
-                    <li class="setup-step">
-                        <span class="step-num bg-coral" aria-hidden="true">5</span>
-                        <h3><span class="visually-hidden">Step 5: </span>Open VoiceCoder and talk</h3>
-                        <p>Open the workspace’s <strong>VoiceCoder</strong> app in Chrome or Edge and allow the microphone. Say “hey VoiceCoder” or “Coder,” followed by your request. VS Code Web is on the same page.</p>
-                    </li>
-                </ol>
+          <!-- EDIT: steps for running VoiceCoder in a Coder workspace. -->
+          <span class="section-label bg-sage">On Coder</span>
+          <ol class="setup-steps">
+            <li class="setup-step">
+              <span class="step-num bg-coral" aria-hidden="true">1</span>
+              <h3>
+                <span class="visually-hidden">Step 1: </span>Clone the repo
+              </h3>
+              <p>
+                Clone it with its submodules (the bridge and the front end live
+                in their own repos).
+              </p>
+              <div class="code-row">
+                <code
+                  >git clone --recurse-submodules
+                  https://github.com/TheAtlantaDream/VoiceCoder.git</code
+                ><button
+                  type="button"
+                  class="copy-btn"
+                  data-copy="git clone --recurse-submodules https://github.com/TheAtlantaDream/VoiceCoder.git"
+                >
+                  Copy
+                </button>
+              </div>
+            </li>
+            <li class="setup-step">
+              <span class="step-num bg-yellow" aria-hidden="true">2</span>
+              <h3>
+                <span class="visually-hidden">Step 2: </span>Push the Coder
+                template
+              </h3>
+              <p>
+                From the repo folder, push the template in
+                <code>template/</code> to your Coder deployment.
+              </p>
+              <!-- TODO(team): confirm template push command -->
+              <div class="code-row">
+                <code
+                  >coder templates push voicecoder --directory ./template</code
+                ><button
+                  type="button"
+                  class="copy-btn"
+                  data-copy="coder templates push voicecoder --directory ./template"
+                >
+                  Copy
+                </button>
+              </div>
+            </li>
+            <li class="setup-step">
+              <span class="step-num bg-sage" aria-hidden="true">3</span>
+              <h3>
+                <span class="visually-hidden">Step 3: </span>Create a workspace
+              </h3>
+              <p>
+                In Coder, create a workspace from the VoiceCoder template and
+                paste your key into the
+                <strong>Anthropic API Key</strong> parameter. Without a key,
+                VoiceCoder still transcribes and cleans your speech, but no
+                coding agent runs.
+              </p>
+            </li>
+            <li class="setup-step">
+              <span class="step-num bg-mint" aria-hidden="true">4</span>
+              <h3>
+                <span class="visually-hidden">Step 4: </span>Wait for the first
+                build
+              </h3>
+              <p>
+                The first boot builds the images and downloads the speech model
+                (about 650 MB). After that, workspaces on the same host start
+                quickly.
+              </p>
+            </li>
+            <li class="setup-step">
+              <span class="step-num bg-coral" aria-hidden="true">5</span>
+              <h3>
+                <span class="visually-hidden">Step 5: </span>Open VoiceCoder and
+                talk
+              </h3>
+              <p>
+                Open the workspace’s <strong>VoiceCoder</strong> app in Chrome
+                or Edge and allow the microphone. Say “hey VoiceCoder” or
+                “Coder,” followed by your request. VS Code Web is on the same
+                page.
+              </p>
+            </li>
+          </ol>
 
-                <!-- EDIT: steps for running VoiceCoder locally with Docker. -->
-                <span class="section-label bg-yellow">On your computer</span>
-                <ol class="setup-steps">
-                    <li class="setup-step">
-                        <span class="step-num bg-yellow" aria-hidden="true">1</span>
-                        <h3><span class="visually-hidden">Step 1: </span>Add your key</h3>
-                        <p>After cloning, create your environment file and set <code>ANTHROPIC_API_KEY</code> in it. Never commit <code>.env</code>.</p>
-                        <div class="code-row"><code>cp .env.example .env</code><button type="button" class="copy-btn" data-copy="cp .env.example .env">Copy</button></div>
-                    </li>
-                    <li class="setup-step">
-                        <span class="step-num bg-sage" aria-hidden="true">2</span>
-                        <h3><span class="visually-hidden">Step 2: </span>Start the stack</h3>
-                        <p>This starts the Parakeet speech-to-text service, the bridge, the front end and VS Code Web with Docker Compose. Use <code>logs</code> to follow output and <code>down</code> to stop.</p>
-                        <div class="code-row"><code>./scripts/run-local.sh</code><button type="button" class="copy-btn" data-copy="./scripts/run-local.sh">Copy</button></div>
-                    </li>
-                    <li class="setup-step">
-                        <span class="step-num bg-coral" aria-hidden="true">3</span>
-                        <h3><span class="visually-hidden">Step 3: </span>Open it</h3>
-                        <p>Go to <a href="http://127.0.0.1:8080/">127.0.0.1:8080</a> on the same computer and start talking.</p>
-                    </li>
-                </ol>
+          <!-- EDIT: steps for running VoiceCoder locally with Docker. -->
+          <span class="section-label bg-yellow">On your computer</span>
+          <ol class="setup-steps">
+            <li class="setup-step">
+              <span class="step-num bg-yellow" aria-hidden="true">1</span>
+              <h3><span class="visually-hidden">Step 1: </span>Add your key</h3>
+              <p>
+                After cloning, create your environment file and set
+                <code>ANTHROPIC_API_KEY</code> in it. Never commit
+                <code>.env</code>.
+              </p>
+              <div class="code-row">
+                <code>cp .env.example .env</code
+                ><button
+                  type="button"
+                  class="copy-btn"
+                  data-copy="cp .env.example .env"
+                >
+                  Copy
+                </button>
+              </div>
+            </li>
+            <li class="setup-step">
+              <span class="step-num bg-sage" aria-hidden="true">2</span>
+              <h3>
+                <span class="visually-hidden">Step 2: </span>Start the stack
+              </h3>
+              <p>
+                This starts the Parakeet speech-to-text service, the bridge, the
+                front end and VS Code Web with Docker Compose. Use
+                <code>logs</code> to follow output and <code>down</code> to
+                stop.
+              </p>
+              <div class="code-row">
+                <code>./scripts/run-local.sh</code
+                ><button
+                  type="button"
+                  class="copy-btn"
+                  data-copy="./scripts/run-local.sh"
+                >
+                  Copy
+                </button>
+              </div>
+            </li>
+            <li class="setup-step">
+              <span class="step-num bg-coral" aria-hidden="true">3</span>
+              <h3><span class="visually-hidden">Step 3: </span>Open it</h3>
+              <p>
+                Go to <a href="http://127.0.0.1:8080/">127.0.0.1:8080</a> on the
+                same computer and start talking.
+              </p>
+            </li>
+          </ol>
 
-                <p class="tabs-note">Stuck? The <a data-link="repo" href="https://github.com/TheAtlantaDream/VoiceCoder">README</a> has the full details, including how to update the bridge and front-end submodules.</p>
-            </div>
-        </section>
+          <p class="tabs-note">
+            Stuck? The
+            <a
+              data-link="repo"
+              href="https://github.com/TheAtlantaDream/VoiceCoder"
+              >README</a
+            >
+            has the full details, including how to update the bridge and
+            front-end submodules.
+          </p>
+        </div>
+      </section>
 
-        <!-- ============================================================
+      <!-- ============================================================
              EDIT: ABOUT US page (#about-us)
              - Replace the [A sentence about why you built it.] placeholder in the intro.
              - Each team member has their own card below, marked with a comment block.
              - Photos: see assets/team/README.md (member-1 ... member-4).
              ============================================================ -->
-        <section class="page-view" id="view-about-us" tabindex="-1" aria-labelledby="about-title" hidden>
-            <div class="panel">
-                <h1 class="page-title" id="about-title" tabindex="-1">
-                    <span class="pill pink">About</span>
-                    <span class="pixel-block">Us</span>
-                </h1>
-                <!-- EDIT: team intro. -->
-                <p class="lead">We’re a team of four students from Georgia Tech, Georgia State and UGA who built VoiceCoder so that developers who can’t rely on a keyboard or mouse can still write code.</p>
-                <ul class="team">
-                    <!-- ========================================================
+      <section
+        class="page-view"
+        id="view-about-us"
+        tabindex="-1"
+        aria-labelledby="about-title"
+        hidden
+      >
+        <div class="panel">
+          <h1 class="page-title" id="about-title" tabindex="-1">
+            <span class="pill pink">About</span>
+            <span class="pixel-block">Us</span>
+          </h1>
+          <!-- EDIT: team intro. -->
+          <p class="lead">
+            We’re a team of four students from Georgia Tech, Georgia State and
+            UGA who built VoiceCoder so that developers who can’t rely on a
+            keyboard or mouse can still write code.
+          </p>
+          <ul class="team">
+            <!-- ========================================================
                          TEAM MEMBER 1 — Stephen Sulimani, Coder template + Parakeet
                          To edit this card:
                          - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
@@ -552,15 +989,30 @@
                            Not added yet; the coloured square shows. When you add it, change alt="…"
                            to describe the photo, e.g. "Stephen Sulimani smiling in a grey hoodie".
                          ======================================================== -->
-                    <li class="member">
-                        <img class="photo bg-coral" src="assets/team/stephen.webp" alt="Photo of Stephen Sulimani" data-name="Stephen Sulimani" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
-                        <div class="member-text">
-                            <h3>Stephen Sulimani</h3>
-                            <span class="role">Coder template + Parakeet</span>
-                            <p>MS in Quantitative &amp; Computational Finance at Georgia Tech, BS in Computer Science from UGA. A backend and quant engineer who built the Coder workspace template and speech-to-text that every VoiceCoder session runs on. <a href="https://suli.nyc">suli.nyc</a></p>
-                        </div>
-                    </li>
-                    <!-- ========================================================
+            <li class="member">
+              <img
+                class="photo bg-coral"
+                src="assets/team/stephen.webp"
+                alt="Photo of Stephen Sulimani"
+                data-name="Stephen Sulimani"
+                width="140"
+                height="140"
+                loading="lazy"
+                onerror="photoFallback(this)"
+              />
+              <div class="member-text">
+                <h3>Stephen Sulimani</h3>
+                <span class="role">Coder template + Parakeet</span>
+                <p>
+                  MS in Quantitative &amp; Computational Finance at Georgia
+                  Tech, BS in Computer Science from UGA. A backend and quant
+                  engineer who built the Coder workspace template and
+                  speech-to-text that every VoiceCoder session runs on.
+                  <a href="https://suli.nyc">suli.nyc</a>
+                </p>
+              </div>
+            </li>
+            <!-- ========================================================
                          TEAM MEMBER 2 — Carter Tierney, Go bridge
                          To edit this card:
                          - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
@@ -570,15 +1022,29 @@
                            Not added yet; the coloured square shows. When you add it, change alt="…"
                            to describe the photo, e.g. "Carter Tierney smiling in a grey hoodie".
                          ======================================================== -->
-                    <li class="member">
-                        <img class="photo bg-yellow" src="assets/team/carter.webp" alt="Photo of Carter Tierney" data-name="Carter Tierney" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
-                        <div class="member-text">
-                            <h3>Carter Tierney</h3>
-                            <span class="role">Go bridge</span>
-                            <p>MS in Computer Science at Georgia State University. Built the Go bridge, the real-time link that streams your voice in, turns it into a clean request and hands it to the coding agent.</p>
-                        </div>
-                    </li>
-                    <!-- ========================================================
+            <li class="member">
+              <img
+                class="photo bg-yellow"
+                src="assets/team/carter.png"
+                alt="Photo of Carter Tierney"
+                data-name="Carter Tierney"
+                width="140"
+                height="140"
+                loading="lazy"
+                onerror="photoFallback(this)"
+              />
+              <div class="member-text">
+                <h3>Carter Tierney</h3>
+                <span class="role">Go bridge</span>
+                <p>
+                  MS in Computer Science at Georgia State University. Built the
+                  Go bridge, the real-time link that streams your voice in,
+                  turns it into a clean request and hands it to the coding
+                  agent.
+                </p>
+              </div>
+            </li>
+            <!-- ========================================================
                          TEAM MEMBER 3 — Uyiosa Nehikhuere, Agent runner
                          To edit this card:
                          - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
@@ -588,15 +1054,28 @@
                            Not added yet; the coloured square shows. When you add it, change alt="…"
                            to describe the photo, e.g. "Uyiosa Nehikhuere smiling in a grey hoodie".
                          ======================================================== -->
-                    <li class="member">
-                        <img class="photo bg-sage" src="assets/team/uyiosa.webp" alt="Photo of Uyiosa Nehikhuere" data-name="Uyiosa Nehikhuere" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
-                        <div class="member-text">
-                            <h3>Uyiosa Nehikhuere</h3>
-                            <span class="role">Agent runner</span>
-                            <p>Computer Science at Georgia State University. Built the agent runner, which connects Claude Code to each workspace and sets the rules the agent follows when it edits your project.</p>
-                        </div>
-                    </li>
-                    <!-- ========================================================
+            <li class="member">
+              <img
+                class="photo bg-sage"
+                src="assets/team/uyi.png"
+                alt="Photo of Uyiosa Nehikhuere"
+                data-name="Uyiosa Nehikhuere"
+                width="140"
+                height="140"
+                loading="lazy"
+                onerror="photoFallback(this)"
+              />
+              <div class="member-text">
+                <h3>Uyiosa Nehikhuere</h3>
+                <span class="role">Agent runner</span>
+                <p>
+                  Computer Science at Georgia State University. Built the agent
+                  runner, which connects Claude Code to each workspace and sets
+                  the rules the agent follows when it edits your project.
+                </p>
+              </div>
+            </li>
+            <!-- ========================================================
                          TEAM MEMBER 4 — Seth Voisine, Front end + design
                          To edit this card:
                          - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
@@ -605,333 +1084,399 @@
                          - Photo: assets/team/seth.webp (square, about 400x400, under ~100 KB).
                            Added. If you replace it, update alt="…" to describe the new photo.
                          ======================================================== -->
-                    <li class="member">
-                        <img class="photo bg-mint" src="assets/team/seth.webp" alt="Seth Voisine smiling, in a navy suit and blue patterned tie, in front of green trees" data-name="Seth Voisine" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
-                        <div class="member-text">
-                            <h3>Seth Voisine</h3>
-                            <span class="role">Front end + design</span>
-                            <p>Computer Science at the University of Georgia. Designed and built VoiceCoder’s hands-free, accessible interface, along with the project’s visual style and this site.</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </section>
-
-        <div class="edge-nav bottom">
-            <button type="button" class="motion-toggle" aria-pressed="false">Pause animation</button>
+            <li class="member">
+              <img
+                class="photo bg-mint"
+                src="assets/team/seth.webp"
+                alt="Seth Voisine smiling, in a navy suit and blue patterned tie, in front of green trees"
+                data-name="Seth Voisine"
+                width="140"
+                height="140"
+                loading="lazy"
+                onerror="photoFallback(this)"
+              />
+              <div class="member-text">
+                <h3>Seth Voisine</h3>
+                <span class="role">Front end + design</span>
+                <p>
+                  Computer Science at the University of Georgia. Designed and
+                  built VoiceCoder’s hands-free, accessible interface, along
+                  with the project’s visual style and this site.
+                </p>
+              </div>
+            </li>
+          </ul>
         </div>
+      </section>
+
+      <div class="edge-nav bottom">
+        <button type="button" class="motion-toggle" aria-pressed="false">
+          Pause animation
+        </button>
+      </div>
     </div>
 
     <script>
-        // ============================================================
-        // EDIT: links the team must fill in. Every link with data-link="create",
-        // "workspaces" or "repo" gets its href from here when the page loads.
-        // ============================================================
-        const CONFIG = {
-            coderUrl: "https://coder.example.com",   // TODO(team): real Coder deployment URL
-            template: "voicecoder",                  // TODO(team): template name in Coder
-            repoUrl: "https://github.com/TheAtlantaDream/VoiceCoder",
-            devpostUrl: "https://devpost.com/software/voicecoder" // home page "Start coding with your voice" button
-        };
-        const LINKS = {
-            create: CONFIG.coderUrl + "/templates/" + CONFIG.template + "/workspace?mode=auto",
-            workspaces: CONFIG.coderUrl + "/workspaces",
-            repo: CONFIG.repoUrl,
-            devpost: CONFIG.devpostUrl
-        };
-        document.querySelectorAll('[data-link]').forEach((a) => {
-            const href = LINKS[a.dataset.link];
-            if (href) a.href = href;
+      // ============================================================
+      // EDIT: links the team must fill in. Every link with data-link="create",
+      // "workspaces" or "repo" gets its href from here when the page loads.
+      // ============================================================
+      const CONFIG = {
+        coderUrl: "https://coder.example.com", // TODO(team): real Coder deployment URL
+        template: "voicecoder", // TODO(team): template name in Coder
+        repoUrl: "https://github.com/TheAtlantaDream/VoiceCoder",
+        devpostUrl: "https://devpost.com/software/voicecoder", // home page "Start coding with your voice" button
+      };
+      const LINKS = {
+        create:
+          CONFIG.coderUrl +
+          "/templates/" +
+          CONFIG.template +
+          "/workspace?mode=auto",
+        workspaces: CONFIG.coderUrl + "/workspaces",
+        repo: CONFIG.repoUrl,
+        devpost: CONFIG.devpostUrl,
+      };
+      document.querySelectorAll("[data-link]").forEach((a) => {
+        const href = LINKS[a.dataset.link];
+        if (href) a.href = href;
+      });
+
+      const container = document.getElementById("canvas-container");
+
+      const scene = new THREE.Scene();
+
+      scene.background = new THREE.Color("#F5F4EF");
+
+      scene.fog = new THREE.FogExp2("#F5F4EF", 0.015);
+
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000,
+      );
+      camera.position.z = 25;
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(10, 20, 10);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      scene.add(dirLight);
+
+      const fillLight = new THREE.DirectionalLight(0xebe5df, 0.4);
+      fillLight.position.set(-10, 0, -10);
+      scene.add(fillLight);
+
+      const voxelGroup = new THREE.Group();
+      scene.add(voxelGroup);
+
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+      const palette = [
+        { color: 0x71906e, weight: 34, roughness: 0.35, metalness: 0.05 },
+        { color: 0xffffff, weight: 30, roughness: 0.2, metalness: 0.1 },
+        { color: 0x141414, weight: 22, roughness: 0.3, metalness: 0.15 },
+        { color: 0x98fb98, weight: 5, roughness: 0.3, metalness: 0.05 },
+        { color: 0xff6060, weight: 5, roughness: 0.3, metalness: 0.05 },
+        { color: 0xffffc5, weight: 4, roughness: 0.25, metalness: 0.05 },
+      ];
+      const materials = palette.map(
+        (p) =>
+          new THREE.MeshStandardMaterial({
+            color: p.color,
+            roughness: p.roughness,
+            metalness: p.metalness,
+          }),
+      );
+      const totalWeight = palette.reduce((sum, p) => sum + p.weight, 0);
+      function pickMaterial() {
+        let r = Math.random() * totalWeight;
+        for (let k = 0; k < palette.length; k++) {
+          r -= palette[k].weight;
+          if (r < 0) return materials[k];
+        }
+        return materials[0];
+      }
+
+      const COLS = 40;
+      const MAX_HALF = 7;
+      const CUBE = 0.55;
+      const STEP = 0.66;
+      const columns = [];
+      const allCubes = [];
+      const bandMaterial = new THREE.MeshStandardMaterial({
+        color: 0x141414,
+        roughness: 0.3,
+        metalness: 0.15,
+      });
+
+      for (let i = 0; i < COLS; i++) {
+        const x = (i - (COLS - 1) / 2) * STEP;
+        const z = Math.sin(i * 0.28) * 1.6;
+        const stack = [];
+        for (let j = -MAX_HALF; j <= MAX_HALF; j++) {
+          const mat = pickMaterial();
+          const cube = new THREE.Mesh(geometry, mat);
+          cube.position.set(x, j * STEP, z);
+          cube.rotation.y = Math.floor(Math.random() * 4) * (Math.PI / 2);
+          cube.scale.setScalar(0.001);
+          cube.userData.level = Math.abs(j);
+          cube.userData.col = i;
+          cube.userData.wavePos = new THREE.Vector3(x, j * STEP, z);
+          cube.userData.waveMat = mat;
+          cube.userData.micPos = null;
+          cube.castShadow = true;
+          cube.receiveShadow = true;
+          voxelGroup.add(cube);
+          stack.push(cube);
+          allCubes.push(cube);
+        }
+        columns.push(stack);
+      }
+
+      // Microphone made of voxels: a generic side-mounted broadcast mic.
+      // Long tube body with a dark front grille, a U-shaped yoke that holds it from the sides,
+      // and a short stand arm rising from the top of the yoke.
+      const micVoxels = [];
+      const addVoxel = (gx, gy, gz, dark) =>
+        micVoxels.push({ gx, gy, gz, dark });
+      const R = 2.25;
+      for (let gx = -6; gx <= 5; gx++) {
+        for (let gy = -2; gy <= 2; gy++) {
+          for (let gz = -2; gz <= 2; gz++) {
+            if (gy * gy + gz * gz > R * R) continue;
+            addVoxel(gx, gy, gz, gx >= 2);
+          }
+        }
+      }
+      for (let gy = 0; gy <= 4; gy++) {
+        addVoxel(2.5, gy, -3, true);
+        addVoxel(2.5, gy, 3, true);
+      }
+      addVoxel(2.5, 0, -4, true);
+      addVoxel(2.5, 0, 4, true);
+      for (let gz = -2; gz <= 2; gz++) addVoxel(2.5, 4, gz, true);
+      addVoxel(2.5, 5, 0, true);
+      addVoxel(2.5, 6, 0, true);
+      addVoxel(3.5, 7, 0, true);
+      addVoxel(4.5, 8, 0, true);
+      addVoxel(5.5, 9, 0, true);
+
+      // Center the shape, then angle it: dark grille end turned away and up, colored body toward the viewer and tilted down
+      const micOffset = new THREE.Vector3(0.5, -3.2, 0);
+      const micTilt = new THREE.Euler(0.06, Math.PI - 0.4, 0.22, "YXZ");
+
+      // Give each mic voxel the nearest free cube, so cubes travel short distances
+      const free = new Set(allCubes);
+      micVoxels.forEach((v) => {
+        const target = new THREE.Vector3(
+          v.gx + micOffset.x,
+          v.gy + micOffset.y,
+          v.gz + micOffset.z,
+        )
+          .multiplyScalar(STEP)
+          .applyEuler(micTilt);
+        let best = null,
+          bestD = Infinity;
+        free.forEach((c) => {
+          const d = c.userData.wavePos.distanceToSquared(target);
+          if (d < bestD) {
+            bestD = d;
+            best = c;
+          }
         });
+        free.delete(best);
+        best.userData.micPos = target;
+        best.userData.micMat = v.dark ? bandMaterial : best.userData.waveMat;
+      });
 
-        const container = document.getElementById('canvas-container');
+      // Timeline: wave, morph to mic, hold, morph back
+      const WAVE_HOLD = 9,
+        MORPH = 3,
+        MIC_HOLD = 6;
+      const CYCLE = WAVE_HOLD + MORPH + MIC_HOLD + MORPH;
+      const smooth = (t) => t * t * (3 - 2 * t);
+      function micAmount(time) {
+        const t = time % CYCLE;
+        if (t < WAVE_HOLD) return 0;
+        if (t < WAVE_HOLD + MORPH) return smooth((t - WAVE_HOLD) / MORPH);
+        if (t < WAVE_HOLD + MORPH + MIC_HOLD) return 1;
+        return 1 - smooth((t - WAVE_HOLD - MORPH - MIC_HOLD) / MORPH);
+      }
+      const tmp = new THREE.Vector3();
 
-        const scene = new THREE.Scene();
+      let mouseX = 0;
+      let mouseY = 0;
+      let targetX = 0;
+      let targetY = 0;
+      const windowHalfX = window.innerWidth / 2;
+      const windowHalfY = window.innerHeight / 2;
 
-        scene.background = new THREE.Color('#F5F4EF');
+      let mouseInside = false;
+      document.addEventListener("mousemove", (event) => {
+        mouseX = event.clientX - windowHalfX;
+        mouseY = event.clientY - windowHalfY;
+        mouseInside = true;
+      });
+      document.documentElement.addEventListener("mouseleave", () => {
+        mouseInside = false;
+        mouseX = 0;
+        mouseY = 0;
+      });
+      window.addEventListener("blur", () => {
+        mouseInside = false;
+        mouseX = 0;
+        mouseY = 0;
+      });
 
-        scene.fog = new THREE.FogExp2('#F5F4EF', 0.015);
+      // Motion can be paused (WCAG 2.2.2). Reduced motion starts paused on a still frame
+      // of the wave and never morphs into the microphone.
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      let paused = reduceMotion;
+      let elapsed = 0;
+      let lastNow = performance.now();
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 25;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
-
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(10, 20, 10);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
-        scene.add(dirLight);
-
-        const fillLight = new THREE.DirectionalLight(0xebe5df, 0.4);
-        fillLight.position.set(-10, 0, -10);
-        scene.add(fillLight);
-
-
-        const voxelGroup = new THREE.Group();
-        scene.add(voxelGroup);
-
-
-
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-
-
-        const palette = [
-            { color: 0x71906e, weight: 34, roughness: 0.35, metalness: 0.05 },
-            { color: 0xffffff, weight: 30, roughness: 0.2,  metalness: 0.1  },
-            { color: 0x141414, weight: 22, roughness: 0.3,  metalness: 0.15 },
-            { color: 0x98fb98, weight: 5,  roughness: 0.3,  metalness: 0.05 },
-            { color: 0xff6060, weight: 5,  roughness: 0.3,  metalness: 0.05 },
-            { color: 0xffffc5, weight: 4,  roughness: 0.25, metalness: 0.05 }
-        ];
-        const materials = palette.map(p => new THREE.MeshStandardMaterial({ color: p.color, roughness: p.roughness, metalness: p.metalness }));
-        const totalWeight = palette.reduce((sum, p) => sum + p.weight, 0);
-        function pickMaterial() {
-            let r = Math.random() * totalWeight;
-            for (let k = 0; k < palette.length; k++) {
-                r -= palette[k].weight;
-                if (r < 0) return materials[k];
-            }
-            return materials[0];
-        }
-
-        const COLS = 40;
-        const MAX_HALF = 7;
-        const CUBE = 0.55;
-        const STEP = 0.66;
-        const columns = [];
-        const allCubes = [];
-        const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.3, metalness: 0.15 });
-
-        for (let i = 0; i < COLS; i++) {
-            const x = (i - (COLS - 1) / 2) * STEP;
-            const z = Math.sin(i * 0.28) * 1.6;
-            const stack = [];
-            for (let j = -MAX_HALF; j <= MAX_HALF; j++) {
-                const mat = pickMaterial();
-                const cube = new THREE.Mesh(geometry, mat);
-                cube.position.set(x, j * STEP, z);
-                cube.rotation.y = Math.floor(Math.random() * 4) * (Math.PI / 2);
-                cube.scale.setScalar(0.001);
-                cube.userData.level = Math.abs(j);
-                cube.userData.col = i;
-                cube.userData.wavePos = new THREE.Vector3(x, j * STEP, z);
-                cube.userData.waveMat = mat;
-                cube.userData.micPos = null;
-                cube.castShadow = true;
-                cube.receiveShadow = true;
-                voxelGroup.add(cube);
-                stack.push(cube);
-                allCubes.push(cube);
-            }
-            columns.push(stack);
-        }
-
-        // Microphone made of voxels: a generic side-mounted broadcast mic.
-        // Long tube body with a dark front grille, a U-shaped yoke that holds it from the sides,
-        // and a short stand arm rising from the top of the yoke.
-        const micVoxels = [];
-        const addVoxel = (gx, gy, gz, dark) => micVoxels.push({ gx, gy, gz, dark });
-        const R = 2.25;
-        for (let gx = -6; gx <= 5; gx++) {
-            for (let gy = -2; gy <= 2; gy++) {
-                for (let gz = -2; gz <= 2; gz++) {
-                    if (gy * gy + gz * gz > R * R) continue;
-                    addVoxel(gx, gy, gz, gx >= 2);
-                }
-            }
-        }
-        for (let gy = 0; gy <= 4; gy++) { addVoxel(2.5, gy, -3, true); addVoxel(2.5, gy, 3, true); }
-        addVoxel(2.5, 0, -4, true); addVoxel(2.5, 0, 4, true);
-        for (let gz = -2; gz <= 2; gz++) addVoxel(2.5, 4, gz, true);
-        addVoxel(2.5, 5, 0, true); addVoxel(2.5, 6, 0, true);
-        addVoxel(3.5, 7, 0, true); addVoxel(4.5, 8, 0, true); addVoxel(5.5, 9, 0, true);
-
-        // Center the shape, then angle it: dark grille end turned away and up, colored body toward the viewer and tilted down
-        const micOffset = new THREE.Vector3(0.5, -3.2, 0);
-        const micTilt = new THREE.Euler(0.06, Math.PI - 0.4, 0.22, 'YXZ');
-
-        // Give each mic voxel the nearest free cube, so cubes travel short distances
-        const free = new Set(allCubes);
-        micVoxels.forEach((v) => {
-            const target = new THREE.Vector3(v.gx + micOffset.x, v.gy + micOffset.y, v.gz + micOffset.z).multiplyScalar(STEP).applyEuler(micTilt);
-            let best = null, bestD = Infinity;
-            free.forEach((c) => {
-                const d = c.userData.wavePos.distanceToSquared(target);
-                if (d < bestD) { bestD = d; best = c; }
-            });
-            free.delete(best);
-            best.userData.micPos = target;
-            best.userData.micMat = v.dark ? bandMaterial : best.userData.waveMat;
-        });
-
-        // Timeline: wave, morph to mic, hold, morph back
-        const WAVE_HOLD = 9, MORPH = 3, MIC_HOLD = 6;
-        const CYCLE = WAVE_HOLD + MORPH + MIC_HOLD + MORPH;
-        const smooth = (t) => t * t * (3 - 2 * t);
-        function micAmount(time) {
-            const t = time % CYCLE;
-            if (t < WAVE_HOLD) return 0;
-            if (t < WAVE_HOLD + MORPH) return smooth((t - WAVE_HOLD) / MORPH);
-            if (t < WAVE_HOLD + MORPH + MIC_HOLD) return 1;
-            return 1 - smooth((t - WAVE_HOLD - MORPH - MIC_HOLD) / MORPH);
-        }
-        const tmp = new THREE.Vector3();
-
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetX = 0;
-        let targetY = 0;
-        const windowHalfX = window.innerWidth / 2;
-        const windowHalfY = window.innerHeight / 2;
-
-
-        let mouseInside = false;
-        document.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX - windowHalfX);
-            mouseY = (event.clientY - windowHalfY);
-            mouseInside = true;
-        });
-        document.documentElement.addEventListener('mouseleave', () => {
-            mouseInside = false;
-            mouseX = 0;
-            mouseY = 0;
-        });
-        window.addEventListener('blur', () => {
-            mouseInside = false;
-            mouseX = 0;
-            mouseY = 0;
-        });
-
-
-        // Motion can be paused (WCAG 2.2.2). Reduced motion starts paused on a still frame
-        // of the wave and never morphs into the microphone.
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let paused = reduceMotion;
-        let elapsed = 0;
-        let lastNow = performance.now();
-
-        function animate(now = performance.now()) {
-            requestAnimationFrame(animate);
-            const dt = Math.min(0.1, (now - lastNow) / 1000);
-            lastNow = now;
-            if (paused) return;
-            elapsed += dt;
-            update(elapsed, false);
-            renderer.render(scene, camera);
-        }
-
-        // snap = true jumps straight to the target scale (for the still frame).
-        function update(time, snap) {
-
-
-            targetX = mouseX * 0.001;
-            targetY = mouseY * 0.001;
-
-
-            voxelGroup.rotation.y += 0.025 * (targetX - voxelGroup.rotation.y);
-            voxelGroup.rotation.x += 0.025 * (targetY - voxelGroup.rotation.x);
-
-
-
-
-
-            voxelGroup.position.y = Math.sin(time * 0.3) * 0.5;
-
-
-            const cursorCol = (mouseX / windowHalfX + 1) / 2 * (COLS - 1);
-            const cursorLift = 1 - Math.min(1, Math.abs(mouseY) / windowHalfY) * 0.4;
-            const p = reduceMotion ? 0 : micAmount(time);
-            columns.forEach((stack, i) => {
-                let h = 1.6
-                    + 1.4 * Math.sin(i * 0.32 + time * 0.9)
-                    + 0.9 * Math.sin(i * 0.77 - time * 1.4)
-                    + 0.5 * Math.sin(i * 1.6 + time * 0.6);
-                const d = i - cursorCol;
-                if (mouseInside) h += Math.exp(-(d * d) / 18) * 4.5 * cursorLift;
-                h = Math.max(0.6, Math.min(MAX_HALF + 0.4, h));
-                stack.forEach((cube) => {
-                    const ud = cube.userData;
-                    const pulse = 0.92 + Math.sin(time * 0.9 + i + ud.level) * 0.05;
-                    const waveScale = ud.level < h ? pulse : 0;
-                    const micScale = ud.micPos ? 0.95 : 0;
-                    const target = (waveScale * (1 - p) + micScale * p) * CUBE;
-                    const sc = snap ? target : cube.scale.x + (target - cube.scale.x) * 0.08;
-                    cube.scale.setScalar(Math.max(0.001, sc));
-                    if (ud.micPos) {
-                        tmp.copy(ud.wavePos).lerp(ud.micPos, p);
-                        cube.position.copy(tmp);
-                        cube.material = p > 0.5 ? ud.micMat : ud.waveMat;
-                    }
-                });
-            });
-        }
-
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            if (paused) renderer.render(scene, camera);
-        });
-
-        const motionToggle = document.querySelector('.motion-toggle');
-        function setPaused(next) {
-            paused = next;
-            motionToggle.setAttribute('aria-pressed', String(paused));
-            motionToggle.textContent = paused ? 'Play animation' : 'Pause animation';
-            lastNow = performance.now();
-        }
-        motionToggle.addEventListener('click', () => setPaused(!paused));
-
-
-        const views = { 'what-we-do': 'view-what-we-do', 'setup': 'view-setup', 'about-us': 'view-about-us' };
-        const hero = document.querySelector('.hero-center');
-        const titles = { 'what-we-do': 'What we do · VoiceCoder', 'setup': 'Set up · VoiceCoder', 'about-us': 'About us · VoiceCoder' };
-        function route(focus) {
-            const name = location.hash.replace('#', '');
-            const active = views[name] ? name : '';
-            hero.hidden = active !== '';
-            Object.keys(views).forEach((k) => { document.getElementById(views[k]).hidden = k !== active; });
-            document.querySelectorAll('.main-nav a').forEach((a) => {
-                if (a.getAttribute('href') === '#' + active) a.setAttribute('aria-current', 'page');
-                else a.removeAttribute('aria-current');
-            });
-            document.title = titles[active] || 'VoiceCoder · Code with your voice';
-            if (focus && active) {
-                const view = document.getElementById(views[active]);
-                view.scrollTop = 0;
-                // Focus lands on the heading (announced by screen readers) inside the
-                // scrollable view, so arrow keys and PageDown scroll the page.
-                view.querySelector('.page-title').focus();
-            }
-        }
-        window.addEventListener('hashchange', () => route(true));
-        route(false);
-
-
-        document.querySelectorAll('.copy-btn').forEach((btn) => {
-            btn.addEventListener('click', async () => {
-                try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = 'Copied'; }
-                catch (e) { btn.textContent = 'Select and copy'; }
-                setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
-            });
-        });
-        setPaused(paused);
-        update(0, true);
+      function animate(now = performance.now()) {
+        requestAnimationFrame(animate);
+        const dt = Math.min(0.1, (now - lastNow) / 1000);
+        lastNow = now;
+        if (paused) return;
+        elapsed += dt;
+        update(elapsed, false);
         renderer.render(scene, camera);
-        animate();
-    </script>
+      }
 
-</body></html>
+      // snap = true jumps straight to the target scale (for the still frame).
+      function update(time, snap) {
+        targetX = mouseX * 0.001;
+        targetY = mouseY * 0.001;
+
+        voxelGroup.rotation.y += 0.025 * (targetX - voxelGroup.rotation.y);
+        voxelGroup.rotation.x += 0.025 * (targetY - voxelGroup.rotation.x);
+
+        voxelGroup.position.y = Math.sin(time * 0.3) * 0.5;
+
+        const cursorCol = ((mouseX / windowHalfX + 1) / 2) * (COLS - 1);
+        const cursorLift =
+          1 - Math.min(1, Math.abs(mouseY) / windowHalfY) * 0.4;
+        const p = reduceMotion ? 0 : micAmount(time);
+        columns.forEach((stack, i) => {
+          let h =
+            1.6 +
+            1.4 * Math.sin(i * 0.32 + time * 0.9) +
+            0.9 * Math.sin(i * 0.77 - time * 1.4) +
+            0.5 * Math.sin(i * 1.6 + time * 0.6);
+          const d = i - cursorCol;
+          if (mouseInside) h += Math.exp(-(d * d) / 18) * 4.5 * cursorLift;
+          h = Math.max(0.6, Math.min(MAX_HALF + 0.4, h));
+          stack.forEach((cube) => {
+            const ud = cube.userData;
+            const pulse = 0.92 + Math.sin(time * 0.9 + i + ud.level) * 0.05;
+            const waveScale = ud.level < h ? pulse : 0;
+            const micScale = ud.micPos ? 0.95 : 0;
+            const target = (waveScale * (1 - p) + micScale * p) * CUBE;
+            const sc = snap
+              ? target
+              : cube.scale.x + (target - cube.scale.x) * 0.08;
+            cube.scale.setScalar(Math.max(0.001, sc));
+            if (ud.micPos) {
+              tmp.copy(ud.wavePos).lerp(ud.micPos, p);
+              cube.position.copy(tmp);
+              cube.material = p > 0.5 ? ud.micMat : ud.waveMat;
+            }
+          });
+        });
+      }
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        if (paused) renderer.render(scene, camera);
+      });
+
+      const motionToggle = document.querySelector(".motion-toggle");
+      function setPaused(next) {
+        paused = next;
+        motionToggle.setAttribute("aria-pressed", String(paused));
+        motionToggle.textContent = paused
+          ? "Play animation"
+          : "Pause animation";
+        lastNow = performance.now();
+      }
+      motionToggle.addEventListener("click", () => setPaused(!paused));
+
+      const views = {
+        "what-we-do": "view-what-we-do",
+        setup: "view-setup",
+        "about-us": "view-about-us",
+      };
+      const hero = document.querySelector(".hero-center");
+      const titles = {
+        "what-we-do": "What we do · VoiceCoder",
+        setup: "Set up · VoiceCoder",
+        "about-us": "About us · VoiceCoder",
+      };
+      function route(focus) {
+        const name = location.hash.replace("#", "");
+        const active = views[name] ? name : "";
+        hero.hidden = active !== "";
+        Object.keys(views).forEach((k) => {
+          document.getElementById(views[k]).hidden = k !== active;
+        });
+        document.querySelectorAll(".main-nav a").forEach((a) => {
+          if (a.getAttribute("href") === "#" + active)
+            a.setAttribute("aria-current", "page");
+          else a.removeAttribute("aria-current");
+        });
+        document.title = titles[active] || "VoiceCoder · Code with your voice";
+        if (focus && active) {
+          const view = document.getElementById(views[active]);
+          view.scrollTop = 0;
+          // Focus lands on the heading (announced by screen readers) inside the
+          // scrollable view, so arrow keys and PageDown scroll the page.
+          view.querySelector(".page-title").focus();
+        }
+      }
+      window.addEventListener("hashchange", () => route(true));
+      route(false);
+
+      document.querySelectorAll(".copy-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(btn.dataset.copy);
+            btn.textContent = "Copied";
+          } catch (e) {
+            btn.textContent = "Select and copy";
+          }
+          setTimeout(() => {
+            btn.textContent = "Copy";
+          }, 2000);
+        });
+      });
+      setPaused(paused);
+      update(0, true);
+      renderer.render(scene, camera);
+      animate();
+    </script>
+  </body>
+</html>
+
