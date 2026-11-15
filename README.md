@@ -10,7 +10,7 @@ Everything is in `index.html`. Each editable section starts with an `EDIT:` comm
 - **What we do:** the intro paragraph, the three numbered step cards (`<ol class="card-grid">`) and the feature chips.
 - **Set up:** the "What you need" chips and the numbered steps. If you change a command, change it in both the `<code>` text and the Copy button's `data-copy` attribute.
 - **About us:** the team intro and one card per person. Each card has a `TEAM MEMBER` comment block saying what to fill in (name, role, description, photo).
-- **Photos:** add them to `assets/team/` as `member-1.webp` … `member-4.webp`. See [`assets/team/README.md`](assets/team/README.md) for size and format. A missing photo shows as a coloured square.
+- **Photos:** add them to `assets/team/` (see the table there for each card’s file name). See [`assets/team/README.md`](assets/team/README.md) for size and format. A missing photo shows as a coloured square.
 
 Search for `TODO(team)` to find everything that still needs real values.
 
@@ -22,11 +22,12 @@ Links that depend on the Coder deployment are set in one place, at the top of th
 const CONFIG = {
   coderUrl: "https://coder.example.com",   // TODO(team): real Coder deployment URL
   template: "voicecoder",                  // TODO(team): template name in Coder
-  repoUrl: "https://github.com/TheAtlantaDream/VoiceCoder"
+  repoUrl: "https://github.com/TheAtlantaDream/VoiceCoder",
+  devpostUrl: "https://devpost.com/software/voicecoder" // home page "Start coding with your voice" button
 };
 ```
 
-Links marked `data-link="create"` go to `${coderUrl}/templates/${template}/workspace?mode=auto`, `data-link="workspaces"` go to `${coderUrl}/workspaces`, and `data-link="repo"` go to `repoUrl`. The same URLs are also written in the HTML, so the links work even if the script fails. Update both if you change them.
+Links marked `data-link="create"` go to `${coderUrl}/templates/${template}/workspace?mode=auto`, `data-link="workspaces"` go to `${coderUrl}/workspaces`, `data-link="repo"` go to `repoUrl`, and the home page button (`data-link="devpost"`) goes to `devpostUrl`. The same URLs are also written in the HTML, so the links work even if the script fails. Update both if you change them.
 
 ## Run locally
 

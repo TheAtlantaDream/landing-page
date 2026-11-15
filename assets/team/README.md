@@ -7,7 +7,7 @@ The About us page shows one photo per person. Until a photo is added, its colour
 | `member-1.webp` | Coder template + Whisper |
 | `member-2.webp` | Go bridge |
 | `member-3.webp` | Agent runner |
-| `member-4.webp` | Seth, Front end |
+| `sethpfp.webp` ✅ added | Seth Voisine, Front end |
 
 - **Crop:** square, about **400 × 400** px. The page shows it at 140 × 140.
 - **Format:** WebP or JPG, **under about 100 KB**. If you use JPG, change the `src` in `index.html` from `.webp` to `.jpg`.

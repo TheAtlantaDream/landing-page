@@ -14,13 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
     <script src="assets/vendor/three.min.js"></script>
     <script>
-        // A missing team photo falls back to its coloured square (no broken-image icon).
+        // A missing team photo falls back to its coloured square. The <img> is swapped for a
+        // plain block, because browsers draw a broken-image icon on an <img> without a source.
         function photoFallback(img) {
-            img.onerror = null;
-            img.removeAttribute('src');
-            img.removeAttribute('alt');
-            img.setAttribute('role', 'img');
-            img.setAttribute('aria-label', 'Photo of ' + img.dataset.name);
+            const square = document.createElement('div');
+            square.className = img.className;
+            square.setAttribute('role', 'img');
+            square.setAttribute('aria-label', 'Photo of ' + img.dataset.name);
+            img.replaceWith(square);
         }
     </script>
     <style>
@@ -382,7 +383,7 @@
         <!-- ============================================================
              EDIT: HOME — headline and main button
              Two rows: coral pill + grey pixel block, then pixel block + yellow pill.
-             Change the words inside the <span>s. The button link comes from CONFIG (see the script).
+             Change the words inside the <span>s. The button goes to the Devpost page (CONFIG.devpostUrl in the script).
              ============================================================ -->
         <div class="hero-center">
             <div class="row row-1">
@@ -393,7 +394,7 @@
                 <span class="pixel-block">VoiceCoder</span>
                 <span class="pill pink">Hands-free</span>
             </div>
-            <a class="hero-cta" data-link="create" href="https://coder.example.com/templates/voicecoder/workspace?mode=auto"><span class="dot" aria-hidden="true"></span>Start coding with your voice</a>
+            <a class="hero-cta" data-link="devpost" href="https://devpost.com/software/voicecoder"><span class="dot" aria-hidden="true"></span>Start coding with your voice</a>
         </div>
 
 
@@ -607,21 +608,21 @@
                     <!-- ========================================================
                          TEAM MEMBER 4 — Front end (Seth)
                          Fill in yourself:
-                         1. Name: replace Seth if you want your full name in the <h3>
+                         1. Name: the <h3>
                             AND in data-name on the <img> (used if the photo is missing).
                          2. Role: the line with class="role" (change it if it's wrong).
                          3. Description: replace the [bracketed text] in the <p> with
                             2–3 sentences about what you built and why.
-                         4. Photo: add assets/team/member-4.webp and describe it in alt="…"
+                         4. Photo: assets/team/sethpfp.webp (400x400). Describe it in alt="…"
                             (e.g. "Seth smiling in a grey hoodie"). No photo yet? Leave it;
                             the coloured square shows instead.
                          ======================================================== -->
                     <li class="member">
-                        <img class="photo bg-mint" src="assets/team/member-4.webp" alt="TODO(team): describe the photo, e.g. Seth smiling in a grey hoodie" data-name="Seth" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
+                        <img class="photo bg-mint" src="assets/team/sethpfp.webp" alt="Seth Voisine smiling, in a navy suit and blue patterned tie, in front of green trees" data-name="Seth Voisine" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
                         <div class="member-text">
-                            <h3>Seth</h3>
+                            <h3>Seth Voisine</h3>
                             <span class="role">Front end</span>
-                            <p>[What you built: the accessible voice interface, its design and the editor layout.]</p>
+                            <p>Designed and built the VoiceCoder interface: a hands-free, accessible workspace where you talk to the agent on one side and watch your code change on the other.</p>
                         </div>
                     </li>
                 </ul>
@@ -641,12 +642,14 @@
         const CONFIG = {
             coderUrl: "https://coder.example.com",   // TODO(team): real Coder deployment URL
             template: "voicecoder",                  // TODO(team): template name in Coder
-            repoUrl: "https://github.com/TheAtlantaDream/VoiceCoder"
+            repoUrl: "https://github.com/TheAtlantaDream/VoiceCoder",
+            devpostUrl: "https://devpost.com/software/voicecoder" // home page "Start coding with your voice" button
         };
         const LINKS = {
             create: CONFIG.coderUrl + "/templates/" + CONFIG.template + "/workspace?mode=auto",
             workspaces: CONFIG.coderUrl + "/workspaces",
-            repo: CONFIG.repoUrl
+            repo: CONFIG.repoUrl,
+            devpost: CONFIG.devpostUrl
         };
         document.querySelectorAll('[data-link]').forEach((a) => {
             const href = LINKS[a.dataset.link];
