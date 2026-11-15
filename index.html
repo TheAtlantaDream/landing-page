@@ -281,6 +281,7 @@
         .member-text { flex: 1 1 auto; min-height: 140px; background: #FFFFFF; border-radius: 6px; padding: 1rem 1.2rem; display: flex; flex-direction: column; justify-content: center; gap: 0.4rem; }
         .member-text h3 { font-size: 1.15rem; font-weight: 500; }
         .member-text p { font-size: 0.95rem; line-height: 1.5; }
+        .member-text a { color: var(--text-color); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
         @media (max-width: 700px) {
             .member, .member:nth-child(even) { align-self: stretch; flex-direction: column; }
             .member .photo { width: 120px; height: 120px; flex-basis: auto; }
@@ -516,7 +517,7 @@
                     <li class="setup-step">
                         <span class="step-num bg-sage" aria-hidden="true">2</span>
                         <h3><span class="visually-hidden">Step 2: </span>Start the stack</h3>
-                        <p>This starts Whisper, the bridge, the front end and VS Code Web with Docker Compose. Use <code>logs</code> to follow output and <code>down</code> to stop.</p>
+                        <p>This starts the Parakeet speech-to-text service, the bridge, the front end and VS Code Web with Docker Compose. Use <code>logs</code> to follow output and <code>down</code> to stop.</p>
                         <div class="code-row"><code>./scripts/run-local.sh</code><button type="button" class="copy-btn" data-copy="./scripts/run-local.sh">Copy</button></div>
                     </li>
                     <li class="setup-step">
@@ -542,87 +543,78 @@
                     <span class="pill pink">About</span>
                     <span class="pixel-block">Us</span>
                 </h1>
-                <!-- EDIT: team intro. Replace the bracketed sentence with why you built VoiceCoder. -->
-                <p class="lead">We’re a team of four who built VoiceCoder so that developers who can’t rely on a keyboard or mouse can still write code. [A sentence about why you built it.]</p>
+                <!-- EDIT: team intro. -->
+                <p class="lead">We’re a team of four students from Georgia Tech, Georgia State and UGA who built VoiceCoder so that developers who can’t rely on a keyboard or mouse can still write code.</p>
                 <ul class="team">
                     <!-- ========================================================
-                         TEAM MEMBER 1 — Coder template + Whisper
-                         Fill in yourself:
-                         1. Name: replace [TEAMMATE NAME] in the <h3>
-                            AND in data-name on the <img> (used if the photo is missing).
-                         2. Role: the line with class="role" (change it if it's wrong).
-                         3. Description: replace the [bracketed text] in the <p> with
-                            2–3 sentences about what you built and why.
-                         4. Photo: add assets/team/member-1.webp and describe it in alt="…"
-                            (e.g. "Seth smiling in a grey hoodie"). No photo yet? Leave it;
-                            the coloured square shows instead.
+                         TEAM MEMBER 1 — Stephen Sulimani, Coder template + Parakeet
+                         To edit this card:
+                         - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
+                         - Role: the line with class="role".
+                         - Bio: the <p>. Write & as &amp;.
+                         - Photo: assets/team/stephen.webp (square, about 400x400, under ~100 KB).
+                           Not added yet; the coloured square shows. When you add it, change alt="…"
+                           to describe the photo, e.g. "Stephen Sulimani smiling in a grey hoodie".
                          ======================================================== -->
                     <li class="member">
-                        <img class="photo bg-coral" src="assets/team/member-1.webp" alt="TODO(team): describe the photo, e.g. [name] smiling in a grey hoodie" data-name="[TEAMMATE NAME]" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
+                        <img class="photo bg-coral" src="assets/team/stephen.webp" alt="Photo of Stephen Sulimani" data-name="Stephen Sulimani" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
                         <div class="member-text">
-                            <h3>[TEAMMATE NAME]</h3>
-                            <span class="role">Coder template + Whisper</span>
-                            <p>[What you built: the Coder workspace template, Docker setup and speech-to-text.]</p>
+                            <h3>Stephen Sulimani</h3>
+                            <span class="role">Coder template + Parakeet</span>
+                            <p>MS in Quantitative &amp; Computational Finance at Georgia Tech, BS in Computer Science from UGA. A backend and quant engineer who built the Coder workspace template and speech-to-text that every VoiceCoder session runs on. <a href="https://suli.nyc">suli.nyc</a></p>
                         </div>
                     </li>
                     <!-- ========================================================
-                         TEAM MEMBER 2 — Go bridge
-                         Fill in yourself:
-                         1. Name: replace [TEAMMATE NAME] in the <h3>
-                            AND in data-name on the <img> (used if the photo is missing).
-                         2. Role: the line with class="role" (change it if it's wrong).
-                         3. Description: replace the [bracketed text] in the <p> with
-                            2–3 sentences about what you built and why.
-                         4. Photo: add assets/team/member-2.webp and describe it in alt="…"
-                            (e.g. "Seth smiling in a grey hoodie"). No photo yet? Leave it;
-                            the coloured square shows instead.
+                         TEAM MEMBER 2 — Carter Tierney, Go bridge
+                         To edit this card:
+                         - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
+                         - Role: the line with class="role".
+                         - Bio: the <p>. Write & as &amp;.
+                         - Photo: assets/team/carter.webp (square, about 400x400, under ~100 KB).
+                           Not added yet; the coloured square shows. When you add it, change alt="…"
+                           to describe the photo, e.g. "Carter Tierney smiling in a grey hoodie".
                          ======================================================== -->
                     <li class="member">
-                        <img class="photo bg-yellow" src="assets/team/member-2.webp" alt="TODO(team): describe the photo" data-name="[TEAMMATE NAME]" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
+                        <img class="photo bg-yellow" src="assets/team/carter.webp" alt="Photo of Carter Tierney" data-name="Carter Tierney" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
                         <div class="member-text">
-                            <h3>[TEAMMATE NAME]</h3>
+                            <h3>Carter Tierney</h3>
                             <span class="role">Go bridge</span>
-                            <p>[What you built: the bridge that streams audio, cleans the text and talks to the agent.]</p>
+                            <p>MS in Computer Science at Georgia State University. Built the Go bridge, the real-time link that streams your voice in, turns it into a clean request and hands it to the coding agent.</p>
                         </div>
                     </li>
                     <!-- ========================================================
-                         TEAM MEMBER 3 — Agent runner
-                         Fill in yourself:
-                         1. Name: replace [TEAMMATE NAME] in the <h3>
-                            AND in data-name on the <img> (used if the photo is missing).
-                         2. Role: the line with class="role" (change it if it's wrong).
-                         3. Description: replace the [bracketed text] in the <p> with
-                            2–3 sentences about what you built and why.
-                         4. Photo: add assets/team/member-3.webp and describe it in alt="…"
-                            (e.g. "Seth smiling in a grey hoodie"). No photo yet? Leave it;
-                            the coloured square shows instead.
+                         TEAM MEMBER 3 — Uyiosa Nehikhuere, Agent runner
+                         To edit this card:
+                         - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
+                         - Role: the line with class="role".
+                         - Bio: the <p>. Write & as &amp;.
+                         - Photo: assets/team/uyiosa.webp (square, about 400x400, under ~100 KB).
+                           Not added yet; the coloured square shows. When you add it, change alt="…"
+                           to describe the photo, e.g. "Uyiosa Nehikhuere smiling in a grey hoodie".
                          ======================================================== -->
                     <li class="member">
-                        <img class="photo bg-sage" src="assets/team/member-3.webp" alt="TODO(team): describe the photo" data-name="[TEAMMATE NAME]" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
+                        <img class="photo bg-sage" src="assets/team/uyiosa.webp" alt="Photo of Uyiosa Nehikhuere" data-name="Uyiosa Nehikhuere" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
                         <div class="member-text">
-                            <h3>[TEAMMATE NAME]</h3>
+                            <h3>Uyiosa Nehikhuere</h3>
                             <span class="role">Agent runner</span>
-                            <p>[What you built: running Claude Code in the workspace and the agent’s rules.]</p>
+                            <p>Computer Science at Georgia State University. Built the agent runner, which connects Claude Code to each workspace and sets the rules the agent follows when it edits your project.</p>
                         </div>
                     </li>
                     <!-- ========================================================
-                         TEAM MEMBER 4 — Front end (Seth)
-                         Fill in yourself:
-                         1. Name: the <h3>
-                            AND in data-name on the <img> (used if the photo is missing).
-                         2. Role: the line with class="role" (change it if it's wrong).
-                         3. Description: replace the [bracketed text] in the <p> with
-                            2–3 sentences about what you built and why.
-                         4. Photo: assets/team/sethpfp.webp (400x400). Describe it in alt="…"
-                            (e.g. "Seth smiling in a grey hoodie"). No photo yet? Leave it;
-                            the coloured square shows instead.
+                         TEAM MEMBER 4 — Seth Voisine, Front end + design
+                         To edit this card:
+                         - Name: the <h3>, and data-name on the <img> (used if the photo is missing).
+                         - Role: the line with class="role".
+                         - Bio: the <p>. Write & as &amp;.
+                         - Photo: assets/team/seth.webp (square, about 400x400, under ~100 KB).
+                           Added. If you replace it, update alt="…" to describe the new photo.
                          ======================================================== -->
                     <li class="member">
-                        <img class="photo bg-mint" src="assets/team/sethpfp.webp" alt="Seth Voisine smiling, in a navy suit and blue patterned tie, in front of green trees" data-name="Seth Voisine" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
+                        <img class="photo bg-mint" src="assets/team/seth.webp" alt="Seth Voisine smiling, in a navy suit and blue patterned tie, in front of green trees" data-name="Seth Voisine" width="140" height="140" loading="lazy" onerror="photoFallback(this)">
                         <div class="member-text">
                             <h3>Seth Voisine</h3>
-                            <span class="role">Front end</span>
-                            <p>Designed and built the VoiceCoder interface: a hands-free, accessible workspace where you talk to the agent on one side and watch your code change on the other.</p>
+                            <span class="role">Front end + design</span>
+                            <p>Computer Science at the University of Georgia. Designed and built VoiceCoder’s hands-free, accessible interface, along with the project’s visual style and this site.</p>
                         </div>
                     </li>
                 </ul>
