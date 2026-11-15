@@ -1,0 +1,6 @@
+# Keep text files LF on every OS
+* text=auto eol=lf
+*.svg text eol=lf
+*.webp binary
+*.jpg binary
+*.png binary
